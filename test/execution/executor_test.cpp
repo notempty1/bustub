@@ -45,7 +45,7 @@ using ComparatorType = GenericComparator<8>;
 using HashFunctionType = HashFunction<KeyType>;
 
 // SELECT col_a, col_b FROM test_1 WHERE col_a < 500
-TEST_F(ExecutorTest, DISABLED_SimpleSeqScanTest) {
+TEST_F(ExecutorTest, SimpleSeqScanTest) {
   // Construct query plan
   TableInfo *table_info = GetExecutorContext()->GetCatalog()->GetTable("test_1");
   const Schema &schema = table_info->schema_;
@@ -55,6 +55,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleSeqScanTest) {
   auto *predicate = MakeComparisonExpression(col_a, const500, ComparisonType::LessThan);
   auto *out_schema = MakeOutputSchema({{"colA", col_a}, {"colB", col_b}});
   SeqScanPlanNode plan{out_schema, predicate, table_info->oid_};
+
 
   // Execute
   std::vector<Tuple> result_set{};
@@ -69,7 +70,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleSeqScanTest) {
 }
 
 // INSERT INTO empty_table2 VALUES (100, 10), (101, 11), (102, 12)
-TEST_F(ExecutorTest, DISABLED_SimpleRawInsertTest) {
+TEST_F(ExecutorTest, SimpleRawInsertTest) {
   // Create Values to insert
   std::vector<Value> val1{ValueFactory::GetIntegerValue(100), ValueFactory::GetIntegerValue(10)};
   std::vector<Value> val2{ValueFactory::GetIntegerValue(101), ValueFactory::GetIntegerValue(11)};
@@ -111,7 +112,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertTest) {
 }
 
 // INSERT INTO empty_table2 SELECT col_a, col_b FROM test_1 WHERE col_a < 500
-TEST_F(ExecutorTest, DISABLED_SimpleSelectInsertTest) {
+TEST_F(ExecutorTest, SimpleSelectInsertTest) {
   const Schema *out_schema1;
   std::unique_ptr<AbstractPlanNode> scan_plan1;
   {
@@ -163,7 +164,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleSelectInsertTest) {
 }
 
 // INSERT INTO empty_table2 VALUES (100, 10), (101, 11), (102, 12)
-TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
+TEST_F(ExecutorTest, SimpleRawInsertWithIndexTest) {
   // Create Values to insert
   std::vector<Value> val1{ValueFactory::GetIntegerValue(100), ValueFactory::GetIntegerValue(10)};
   std::vector<Value> val2{ValueFactory::GetIntegerValue(101), ValueFactory::GetIntegerValue(11)};
@@ -181,6 +182,7 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
 
   // Execute the insert
   GetExecutionEngine()->Execute(&insert_plan, nullptr, GetTxn(), GetExecutorContext());
+
 
   // Iterate through table make sure that values were inserted.
 
@@ -213,11 +215,10 @@ TEST_F(ExecutorTest, DISABLED_SimpleRawInsertWithIndexTest) {
   // Get RID from index, fetch tuple, and compare
   for (auto &table_tuple : result_set) {
     rids.clear();
-
     // Scan the index
     const auto index_key = table_tuple.KeyFromTuple(schema, index_info->key_schema_, index_info->index_->GetKeyAttrs());
-    index_info->index_->ScanKey(index_key, &rids, GetTxn());
 
+    index_info->index_->ScanKey(index_key, &rids, GetTxn());
     Tuple indexed_tuple{};
     ASSERT_TRUE(table_info->table_->GetTuple(rids[0], &indexed_tuple, GetTxn()));
     ASSERT_EQ(indexed_tuple.GetValue(out_schema, out_schema->GetColIdx("colA")).GetAs<int32_t>(),
@@ -237,14 +238,12 @@ TEST_F(ExecutorTest, DISABLED_SimpleDeleteTest) {
   auto predicate = MakeComparisonExpression(col_a, const50, ComparisonType::Equal);
   auto out_schema1 = MakeOutputSchema({{"colA", col_a}});
   auto scan_plan1 = std::make_unique<SeqScanPlanNode>(out_schema1, predicate, table_info->oid_);
-
   // Create the index
   auto key_schema = ParseCreateStatement("a bigint");
   ComparatorType comparator{key_schema.get()};
   auto *index_info = GetExecutorContext()->GetCatalog()->CreateIndex<KeyType, ValueType, ComparatorType>(
       GetTxn(), "index1", "test_1", GetExecutorContext()->GetCatalog()->GetTable("test_1")->schema_, *key_schema, {0},
-      8, HashFunctionType{});
-
+      8, HashFunctionType{});        
   // SELECT col_a FROM test_1 WHERE col_a == 50
   std::vector<Tuple> result_set;
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
@@ -256,20 +255,21 @@ TEST_F(ExecutorTest, DISABLED_SimpleDeleteTest) {
   }
 
   // DELETE FROM test_1 WHERE col_a == 50
-  const Tuple index_key = Tuple(result_set[0]);
+  //result_set 装的是索引的tuple,根据索引tuple找到对应的page_tuple并删掉.
+ // const Tuple index_key = Tuple(result_set[0]);
+  auto index_key2  = result_set[0].KeyFromTuple(schema,index_info->key_schema_,index_info->index_.get()->GetKeyAttrs());
   std::unique_ptr<AbstractPlanNode> delete_plan;
   { delete_plan = std::make_unique<DeletePlanNode>(scan_plan1.get(), table_info->oid_); }
   GetExecutionEngine()->Execute(delete_plan.get(), nullptr, GetTxn(), GetExecutorContext());
-
   result_set.clear();
 
   // SELECT col_a FROM test_1 WHERE col_a == 50
   GetExecutionEngine()->Execute(scan_plan1.get(), &result_set, GetTxn(), GetExecutorContext());
   ASSERT_TRUE(result_set.empty());
-
   // Ensure the key was removed from the index
   std::vector<RID> rids{};
-  index_info->index_->ScanKey(index_key, &rids, GetTxn());
+//  std::cout<<"index_key "<<index_key.ToString(&index_info->key_schema_)<<std::endl;
+  index_info->index_->ScanKey(index_key2, &rids, GetTxn());
   ASSERT_TRUE(rids.empty());
 }
 

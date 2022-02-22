@@ -40,6 +40,7 @@ bool TablePage::InsertTuple(const Tuple &tuple, RID *rid, Transaction *txn, Lock
   BUSTUB_ASSERT(tuple.size_ > 0, "Cannot have empty tuples.");
   // If there is not enough space, then return false.
   if (GetFreeSpaceRemaining() < tuple.size_ + SIZE_TUPLE) {
+   // printf("insert_fail not enough space\n");
     return false;
   }
 
@@ -307,6 +308,7 @@ bool TablePage::GetTuple(const RID &rid, Tuple *tuple, Transaction *txn, LockMan
 
 bool TablePage::GetFirstTupleRid(RID *first_rid) {
   // Find and return the first valid tuple.
+ // printf("tuple count = %d\n", GetTupleCount());
   for (uint32_t i = 0; i < GetTupleCount(); ++i) {
     if (!IsDeleted(GetTupleSize(i))) {
       first_rid->Set(GetTablePageId(), i);
@@ -318,6 +320,7 @@ bool TablePage::GetFirstTupleRid(RID *first_rid) {
 }
 
 bool TablePage::GetNextTupleRid(const RID &cur_rid, RID *next_rid) {
+//  printf("get_page_id = %ld", cur_rid.GetPageId(), "gettablePageId = %ld", GetTablePageId());
   BUSTUB_ASSERT(cur_rid.GetPageId() == GetTablePageId(), "Wrong table!");
   // Find and return the first valid tuple after our current slot number.
   for (auto i = cur_rid.GetSlotNum() + 1; i < GetTupleCount(); ++i) {

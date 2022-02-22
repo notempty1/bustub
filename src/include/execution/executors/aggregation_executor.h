@@ -183,7 +183,8 @@ class AggregationExecutor : public AbstractExecutor {
 
   /** Do not use or remove this function, otherwise you will get zero points. */
   const AbstractExecutor *GetChildExecutor() const;
-
+  
+  const AbstractPlanNode *GetPlan() {return plan_;}
  private:
   /** @return The tuple as an AggregateKey */
   AggregateKey MakeAggregateKey(const Tuple *tuple) {

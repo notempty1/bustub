@@ -43,7 +43,6 @@ class ExecutorTest : public ::testing::Test {
   /** Called before every executor test. */
   void SetUp() override {
     ::testing::Test::SetUp();
-
     // Initialize the database subsystems
     lock_manager_ = std::make_unique<LockManager>();
     disk_manager_ = std::make_unique<DiskManager>("executor_test.db");

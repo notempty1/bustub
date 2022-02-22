@@ -58,6 +58,17 @@ class BufferPoolManagerInstance : public BufferPoolManager {
   /** @return pointer to all the pages in the buffer pool */
   Page *GetPages() { return pages_; }
 
+  int GetFreeListSize(){ return free_list_.size();}
+  void GetLock() { 
+    latch_.unlock();
+  }
+  void UnLock(){
+    latch_.unlock();
+  }
+  bool TryLock(){
+    return latch_.try_lock();
+  }
+
  protected:
   /**
    * Fetch the requested page from the buffer pool.

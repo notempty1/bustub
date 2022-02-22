@@ -54,7 +54,6 @@ class ExecutionEngine {
 
     // Prepare the root executor
     executor->Init();
-
     // Execute the query plan
     try {
       Tuple tuple;
@@ -65,9 +64,9 @@ class ExecutionEngine {
         }
       }
     } catch (Exception &e) {
+      printf("eee\n");
       // TODO(student): handle exceptions
     }
-
     return true;
   }
 

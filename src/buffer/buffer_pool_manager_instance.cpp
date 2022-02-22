@@ -14,6 +14,8 @@
 
 #include "common/macros.h"
 
+#include<iostream>
+
 namespace bustub {
 
 BufferPoolManagerInstance::BufferPoolManagerInstance(size_t pool_size, DiskManager *disk_manager,
@@ -48,6 +50,12 @@ BufferPoolManagerInstance::~BufferPoolManagerInstance() {
 }
 
 bool BufferPoolManagerInstance::FlushPgImp(page_id_t page_id) {
+  auto iter = page_table_.find(page_id);
+  if(iter != page_table_.end()){
+    auto frame_id = iter->second;
+    disk_manager_->WritePage(page_id, pages_[frame_id].GetData());
+    DeletePgImp(page_id);
+  }
   // Make sure you call DiskManager::WritePage!
   return false;
 }
@@ -57,15 +65,50 @@ void BufferPoolManagerInstance::FlushAllPgsImp() {
 }
 
 Page *BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) {
+  int frame_id = -1;
+  *page_id = next_page_id_; 
+  if(free_list_.size() != 0){
+    frame_id = free_list_.front(); 
+    free_list_.pop_front(); 
+  }
+  if (frame_id == -1) {
+    return nullptr;
+  }
+  pages_[frame_id].page_id_ = *page_id;
+  AllocatePage();
+  page_table_.insert({*page_id, frame_id});
+  pages_[frame_id].pin_count_ = 1;
+  //      printf("page_id = %p, frame_id = %d\n",page_id, frame_id);
   // 0.   Make sure you call AllocatePage!
   // 1.   If all the pages in the buffer pool are pinned, return nullptr.
   // 2.   Pick a victim page P from either the free list or the replacer. Always pick from the free list first.
   // 3.   Update P's metadata, zero out memory and add P to the page table.
   // 4.   Set the page ID output parameter. Return a pointer to P.
-  return nullptr;
+  return &pages_[frame_id];
 }
 
 Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
+  auto iter = page_table_.find(page_id);
+  if(iter != page_table_.end()){
+   // printf("page_id = %d, not end frame_id = %d\n", page_id,iter->first);
+    return &pages_[iter->second];
+  }else{
+    auto tmp = new Page[1];
+    disk_manager_->ReadPage(page_id, tmp->data_);
+    tmp->page_id_ = page_id;
+    if(free_list_.size() == 0){
+      return nullptr;
+      //lru淘汰
+    } else{
+      int frame_id = free_list_.front();
+      free_list_.pop_front();
+      page_table_.insert({page_id, frame_id});
+      memcpy(&pages_[frame_id], tmp, sizeof(Page));
+      pages_[frame_id].pin_count_ ++;
+      return &pages_[frame_id];
+    } 
+    
+  }
   // 1.     Search the page table for the requested page (P).
   // 1.1    If P exists, pin it and return it immediately.
   // 1.2    If P does not exist, find a replacement page (R) from either the free list or the replacer.
@@ -73,10 +116,19 @@ Page *BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) {
   // 2.     If R is dirty, write it back to the disk.
   // 3.     Delete R from the page table and insert P.
   // 4.     Update P's metadata, read in the page content from disk, and then return a pointer to P.
-  return nullptr;
+  //return nullptr;
 }
 
 bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
+  auto iter = page_table_.find(page_id);
+  if(iter == page_table_.end()) return true;
+  auto frame_id = iter->second;
+  if(pages_[frame_id].pin_count_ != 0){
+    return false;
+  }
+  page_table_.erase(page_id);
+  free_list_.push_front(static_cast<int>(frame_id));
+  DeallocatePage(page_id);
   // 0.   Make sure you call DeallocatePage!
   // 1.   Search the page table for the requested page (P).
   // 1.   If P does not exist, return true.
@@ -85,7 +137,26 @@ bool BufferPoolManagerInstance::DeletePgImp(page_id_t page_id) {
   return false;
 }
 
-bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) { return false; }
+bool BufferPoolManagerInstance::UnpinPgImp(page_id_t page_id, bool is_dirty) { 
+  auto iter = page_table_.find(page_id);
+  if(iter != page_table_.end() ){ 
+    auto frame_id = iter->second;
+    int p_count = pages_[frame_id].pin_count_;
+    if(p_count <= 0) return true;
+    else{
+      p_count -- ;
+      if(p_count == 0){
+        pages_[frame_id].pin_count_ = p_count;
+        // if (is_dirty) FlushPgImp(page_id); 
+        // else DeletePgImp(page_id);
+       
+        FlushPage(page_id);
+      }
+      return true;
+    }
+  }
+  return true; 
+}
 
 page_id_t BufferPoolManagerInstance::AllocatePage() {
   const page_id_t next_page_id = next_page_id_;

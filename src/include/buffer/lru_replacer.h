@@ -15,6 +15,7 @@
 #include <list>
 #include <mutex>  // NOLINT
 #include <vector>
+#include <map>
 
 #include "buffer/replacer.h"
 #include "common/config.h"
@@ -46,6 +47,8 @@ class LRUReplacer : public Replacer {
   size_t Size() override;
 
  private:
+ std::map<int, int> lru_map; 
+ std::map<int, int>::iterator st = lru_map.begin();
   // TODO(student): implement me!
 };
 

@@ -223,7 +223,6 @@ class Catalog {
     for (auto tuple = heap->Begin(txn); tuple != heap->End(); ++tuple) {
       index->InsertEntry(tuple->KeyFromTuple(schema, key_schema, key_attrs), tuple->GetRid(), txn);
     }
-
     // Get the next OID for the new index
     const auto index_oid = next_index_oid_.fetch_add(1);
 

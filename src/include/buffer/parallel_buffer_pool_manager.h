@@ -15,7 +15,10 @@
 #include "buffer/buffer_pool_manager.h"
 #include "recovery/log_manager.h"
 #include "storage/disk/disk_manager.h"
+#include <unordered_map>
 #include "storage/page/page.h"
+
+#include "buffer/buffer_pool_manager_instance.h"
 
 namespace bustub {
 
@@ -30,7 +33,6 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    */
   ParallelBufferPoolManager(size_t num_instances, size_t pool_size, DiskManager *disk_manager,
                             LogManager *log_manager = nullptr);
-
   /**
    * Destroys an existing ParallelBufferPoolManager.
    */
@@ -86,5 +88,12 @@ class ParallelBufferPoolManager : public BufferPoolManager {
    * Flushes all the pages in the buffer pool to disk.
    */
   void FlushAllPgsImp() override;
+  BufferPoolManagerInstance *bpi_;
+  const size_t pool_size_;
+  /** How many instances are in the parallel BPM (if present, otherwise just 1 BPI) */
+  const size_t num_instances_ ;
+ // std::list<BufferPoolManagerInstance> bpi_list_;
+  std::unordered_map<int, BufferPoolManagerInstance*> bpi_map;
+  std::list<int> bpi_index;
 };
 }  // namespace bustub

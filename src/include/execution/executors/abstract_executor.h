@@ -49,6 +49,7 @@ class AbstractExecutor {
   /** @return The schema of the tuples that this executor produces */
   virtual const Schema *GetOutputSchema() = 0;
 
+
   /** @return The executor context in which this executor runs */
   ExecutorContext *GetExecutorContext() { return exec_ctx_; }
 

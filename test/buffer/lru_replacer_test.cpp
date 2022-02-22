@@ -19,7 +19,7 @@
 
 namespace bustub {
 
-TEST(LRUReplacerTest, DISABLED_SampleTest) {
+TEST(LRUReplacerTest, SampleTest) {
   LRUReplacer lru_replacer(7);
 
   // Scenario: unpin six elements, i.e. add them to the replacer.
@@ -41,6 +41,7 @@ TEST(LRUReplacerTest, DISABLED_SampleTest) {
   lru_replacer.Victim(&value);
   EXPECT_EQ(3, value);
 
+ // printf("lru_map_length = %d\n", lru_replacer.Size());
   // Scenario: pin elements in the replacer.
   // Note that 3 has already been victimized, so pinning 3 should have no effect.
   lru_replacer.Pin(3);

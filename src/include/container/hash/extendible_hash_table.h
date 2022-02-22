@@ -83,6 +83,7 @@ class ExtendibleHashTable {
    * Helper function to verify the integrity of the extendible hash table's directory.  Do not touch.
    */
   void VerifyIntegrity();
+  std::unordered_map<int32_t, uint32_t> k_index;
 
  private:
   /**
@@ -126,7 +127,8 @@ class ExtendibleHashTable {
    *
    * @return a pointer to the directory page
    */
-  HashTableDirectoryPage *FetchDirectoryPage();
+  HashTableDirectoryPage *FetchDirectoryPage();//通过bufferpool取到directory_page,然后根据directory找到key对应的bucket_page
+  //在bucket里insert、get
 
   /**
    * Fetches the a bucket page from the buffer pool manager using the bucket's page_id.
@@ -169,7 +171,9 @@ class ExtendibleHashTable {
   page_id_t directory_page_id_;
   BufferPoolManager *buffer_pool_manager_;
   KeyComparator comparator_;
+  bool init = false;
 
+ 
   // Readers includes inserts and removes, writers are splits and merges
   ReaderWriterLatch table_latch_;
   HashFunction<KeyType> hash_fn_;

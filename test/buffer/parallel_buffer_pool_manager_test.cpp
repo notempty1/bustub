@@ -21,7 +21,7 @@ namespace bustub {
 
 // NOLINTNEXTLINE
 // Check whether pages containing terminal characters can be recovered
-TEST(ParallelBufferPoolManagerTest, DISABLED_BinaryDataTest) {
+TEST(ParallelBufferPoolManagerTest, BinaryDataTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t num_instances = 5;
@@ -76,6 +76,7 @@ TEST(ParallelBufferPoolManagerTest, DISABLED_BinaryDataTest) {
 
   // Scenario: We should be able to fetch the data we wrote a while ago.
   page0 = bpm->FetchPage(0);
+  printf("page 0 get data %s\n", page0->GetData());
   EXPECT_EQ(0, memcmp(page0->GetData(), random_binary_data, PAGE_SIZE));
   EXPECT_EQ(true, bpm->UnpinPage(0, true));
 
@@ -88,7 +89,7 @@ TEST(ParallelBufferPoolManagerTest, DISABLED_BinaryDataTest) {
 }
 
 // NOLINTNEXTLINE
-TEST(ParallelBufferPoolManagerTest, DISABLED_SampleTest) {
+TEST(ParallelBufferPoolManagerTest, SampleTest) {
   const std::string db_name = "test.db";
   const size_t buffer_pool_size = 10;
   const size_t num_instances = 5;
@@ -119,10 +120,12 @@ TEST(ParallelBufferPoolManagerTest, DISABLED_SampleTest) {
 
   // Write world out to page 4
   auto page4 = bpm->FetchPage(4);
+  printf("fetch page 4 %s\n",page4->GetData());
   snprintf(page4->GetData(), PAGE_SIZE, "World");
   EXPECT_EQ(0, strcmp(page4->GetData(), "World"));
+  printf("compare page\n");
   bpm->UnpinPage(4, true);
-
+  printf("unpinpage4\n");
   // Scenario: After unpinning pages {0, 1, 2, 3, 4} and pinning pages {0, 1, 2, 3},
   // there would still be one buffer page left for reading page 4.
 

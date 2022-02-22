@@ -56,9 +56,17 @@ class InsertExecutor : public AbstractExecutor {
   /** @return The output schema for the insert */
   const Schema *GetOutputSchema() override { return plan_->OutputSchema(); };
 
+  void IndexInsert(std::vector<bustub::IndexInfo *> indexs_info, Tuple *tuple, RID *rid);
+
  private:
   /** The insert plan node to be executed*/
   const InsertPlanNode *plan_;
+  TablePage *page_;
+  TableInfo *table_info;
+  std::vector<std::vector<bustub::Value>> raw_values;
+ // std::vector<std::vector<bustub::Value>> child_raw_values;
+ // std::unique_ptr<AbstractExecutor> child_executor_;
+  std::vector<Tuple> result_set{};
 };
 
 }  // namespace bustub

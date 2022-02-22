@@ -46,9 +46,15 @@ class SeqScanExecutor : public AbstractExecutor {
 
   /** @return The output schema for the sequential scan */
   const Schema *GetOutputSchema() override { return plan_->OutputSchema(); }
+  //table_oid_t GetTableOid() {return plan_->GetTableOid(); }
+ // const SeqScanPlanNode *GetPlan() {return plan_;}
+  //void SetPage(TablePage *page){ memcpy(page_, page, sizeof(page)); }
 
  private:
   /** The sequential scan plan node to be executed */
   const SeqScanPlanNode *plan_;
+  TablePage *page_;
+  RID *cur_rid;
+  //TableIterator t_iter;
 };
 }  // namespace bustub

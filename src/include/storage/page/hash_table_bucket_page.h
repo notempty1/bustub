@@ -11,9 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 #pragma once
-
+#include "storage/index/generic_key.h"
 #include <utility>
 #include <vector>
+#include <unordered_map>
 
 #include "common/config.h"
 #include "storage/index/int_comparator.h"
@@ -138,7 +139,7 @@ class HashTableBucketPage {
    */
   void PrintBucket();
 
- private:
+ //private:
   // For more on BUCKET_ARRAY_SIZE see storage/page/hash_table_page_defs.h
   char occupied_[(BUCKET_ARRAY_SIZE - 1) / 8 + 1];
   // 0 if tombstone/brand new (never occupied), 1 otherwise.
